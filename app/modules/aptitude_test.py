@@ -66,7 +66,7 @@ def restart_test(test_type):
         "responses": {"q1": "", "q2": "", "q3": ""}
     }
 
-def live_test():
+def aptitude_test():
     tab1, tab2 = st.tabs(["IQ - Logical", "IQ - Numerical"])
 
     with tab1:

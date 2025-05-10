@@ -31,12 +31,12 @@ def quiz():
     if submit_button:
         if "module_conclusions" not in st.session_state:
             st.session_state.module_conclusions = {}
-
+        scores = calculate_scores(responses)
         top_3 = get_top_3_domains_from_quiz(scores)
         st.session_state.module_conclusions["Quiz_based_analysis"] = [{"domain": domain, "score": score} for domain, score in top_3]
 
         st.success("Quiz submitted! Here are your results:")
-        scores = calculate_scores(responses)
+        
         
         # # Display scores
         # st.write("### Your Scores by Domain")

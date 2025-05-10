@@ -1,5 +1,8 @@
 import streamlit as st
 from utils.utils import analyze_with_llm
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 def userdetails():
 
@@ -140,6 +143,9 @@ def userdetails():
             st.session_state.module_conclusions["user_profiling"] = profiling_result
             st.success("Form submitted and analyzed successfully!")
             
+            logging.debug(f"Raw LLM score response for user profiling: {profiling_result}")
+
+
             # Display User Profiling results (temporary, until all modules are added)
             st.subheader("User Profiling Analysis")
             st.write(f"**Conclusion**: {profiling_result['conclusion']}")

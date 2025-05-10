@@ -581,3 +581,73 @@ def get_top_3_domains_from_quiz(scores):
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     # Return top 3 (or fewer if less than 3 domains)
     return sorted_scores[:3]
+
+
+def generate_final_suggestion():
+    """Generate final domain suggestion by combining all module summaries."""
+    # Construct the prompt
+    prompt = (
+        "You are an AI career advisor specializing in tech domains. Analyze the following data from a candidate, "
+        "including user profile, aptitude test results, and quiz scores, to suggest the 3 best tech domains "
+        "(e.g., Full Stack, Data Science, Machine Learning, Cybersecurity, Flutter, .NET) for them. "
+        "Provide a concise conclusion explaining your reasoning, followed by the suggested domains.\n\n"
+    )
+
+    # User Profile
+    if "user_profiling" in st.session_state.module_conclusions:
+        profile = st.session_state.module_conclusions["user_profiling"]
+        prompt += "User Profile:\n"
+        prompt += f"  Conclusion: {profile['conclusion']}\n"
+        prompt += f"  Suggested Domains: {', '.join(profile['suggested_domains'])}\n\n"
+
+    # Aptitude Tests
+    for test_type in ["logical_test", "numerical_test"]:
+        if test_type in st.session_state.module_conclusions:
+            test_data = st.session_state.module_conclusions[test_type]
+            prompt += f"{test_type.replace('_', ' ').capitalize()}:\n"
+            prompt += f"  Summary: {test_data['summary']}\n"
+            for qr in test_data["questions_responses"]:
+                prompt += f"    Question: {qr['question']}\n"
+                prompt += f"    Response: {qr['response']}\n"
+            prompt += "\n"
+
+    # Quiz Results
+    if "Quiz_based_analysis" in st.session_state.module_conclusions:
+        quiz_data = st.session_state.module_conclusions["Quiz_based_analysis"]
+        prompt += "Quiz Results (Interest in IT Domains):\n"
+        for item in quiz_data:
+            prompt += f"  Domain: {item['domain']}, Score: {item['score']}\n"
+        prompt += "\n"
+
+    # Specify output format
+    prompt += (
+        "Return your response in this format:\n"
+        "Conclusion: [Your conclusion here]\n"
+        "Suggested Domains: [Domain 1], [Domain 2], [Domain 3]"
+    )
+
+    # Call OpenAI API
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are an AI career advisor specializing in tech domains."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=300,
+            temperature=0.7
+        )
+
+        # Extract and parse the response
+        result_text = response.choices[0].message.content.strip()
+        conclusion = result_text.split("Conclusion:")[1].split("Suggested Domains:")[0].strip()
+        domains = result_text.split("Suggested Domains:")[1].strip().split(", ")
+        domains = [d.strip("[]") for d in domains]
+
+        return {
+            "conclusion": conclusion,
+            "suggested_domains": domains
+        }
+    except Exception as e:
+        st.error(f"Error generating suggestion: {str(e)}")
+        return None
